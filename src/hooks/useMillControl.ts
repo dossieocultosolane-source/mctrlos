@@ -18,6 +18,8 @@ export interface TransferConfig {
   destinos: string[];
   fluxoKgMin: number;
   sensorPausado: Record<string, boolean>;
+  origemPct: Record<string, number>;
+  destinoPct: Record<string, number>;
 }
 
 export interface MillState {
