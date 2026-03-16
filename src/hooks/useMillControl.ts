@@ -194,11 +194,17 @@ export function useMillControl() {
               pm.sensorAtivo = false;
             }
 
-            const fluxoPerDest = fluxoPerSecond / s.transfer.destinos.length;
-            const fluxoPerOrigemDest = fluxoPerDest / s.transfer.origens.length;
+            // Use percentage-based distribution
+            const totalDestPct = s.transfer.destinos.reduce((sum, d) => sum + (s.transfer.destinoPct[d] || 100 / s.transfer.destinos.length), 0);
+            const destPct = (s.transfer.destinoPct[dest] || 100 / s.transfer.destinos.length) / totalDestPct;
+            const fluxoPerDest = fluxoPerSecond * destPct;
+
+            const totalOrigPct = s.transfer.origens.reduce((sum, o) => sum + (s.transfer.origemPct[o] || 100 / s.transfer.origens.length), 0);
 
             s.transfer.origens.forEach((orig) => {
               const fa = newSilos[orig];
+              const origPct = (s.transfer.origemPct[orig] || 100 / s.transfer.origens.length) / totalOrigPct;
+              const fluxoPerOrigemDest = fluxoPerDest * origPct;
               const transfer = Math.min(fluxoPerOrigemDest, fa.atual, pm.max - pm.atual);
               fa.atual = Math.max(0, fa.atual - transfer);
               pm.atual = Math.min(pm.max, pm.atual + transfer);

@@ -1,5 +1,6 @@
 import type { TransferConfig } from "@/hooks/useMillControl";
 import { Power, Zap } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 interface TransferControlProps {
   transfer: TransferConfig;
@@ -21,14 +22,45 @@ export const TransferControl = ({
     const next = transfer.origens.includes(silo)
       ? transfer.origens.filter((s) => s !== silo)
       : [...transfer.origens, silo];
-    if (next.length > 0) setTransfer({ origens: next });
+    if (next.length > 0) {
+      // Auto-distribute percentages equally for new selections
+      const newPct: Record<string, number> = {};
+      const equal = Math.round(100 / next.length);
+      next.forEach((s, i) => {
+        newPct[s] = i === next.length - 1 ? 100 - equal * (next.length - 1) : equal;
+      });
+      setTransfer({ origens: next, origemPct: newPct });
+    }
   };
 
   const toggleDestino = (silo: string) => {
     const next = transfer.destinos.includes(silo)
       ? transfer.destinos.filter((s) => s !== silo)
       : [...transfer.destinos, silo];
-    if (next.length > 0) setTransfer({ destinos: next });
+    if (next.length > 0) {
+      const newPct: Record<string, number> = {};
+      const equal = Math.round(100 / next.length);
+      next.forEach((s, i) => {
+        newPct[s] = i === next.length - 1 ? 100 - equal * (next.length - 1) : equal;
+      });
+      setTransfer({ destinos: next, destinoPct: newPct });
+    }
+  };
+
+  const handleOrigemPctChange = (silo: string, value: number) => {
+    if (transfer.origens.length !== 2) return;
+    const other = transfer.origens.find((s) => s !== silo)!;
+    setTransfer({
+      origemPct: { [silo]: value, [other]: 100 - value },
+    });
+  };
+
+  const handleDestinoPctChange = (silo: string, value: number) => {
+    if (transfer.destinos.length !== 2) return;
+    const other = transfer.destinos.find((s) => s !== silo)!;
+    setTransfer({
+      destinoPct: { [silo]: value, [other]: 100 - value },
+    });
   };
 
   const anyPaused = Object.values(sensorPausado).some(Boolean);
@@ -61,9 +93,34 @@ export const TransferControl = ({
               }`}
             >
               {s}
+              {transfer.origens.includes(s) && transfer.origens.length > 1 && (
+                <span className="ml-1 text-[9px] opacity-75">
+                  {transfer.origemPct[s] ?? 50}%
+                </span>
+              )}
             </button>
           ))}
         </div>
+        {transfer.origens.length === 2 && (
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-mono text-muted-foreground w-8">{transfer.origens[0]}</span>
+              <Slider
+                value={[transfer.origemPct[transfer.origens[0]] ?? 50]}
+                onValueChange={([v]) => handleOrigemPctChange(transfer.origens[0], v)}
+                min={10}
+                max={90}
+                step={5}
+                className="flex-1"
+              />
+              <span className="text-[9px] font-mono text-muted-foreground w-8">{transfer.origens[1]}</span>
+            </div>
+            <div className="flex justify-between text-[9px] font-mono text-primary">
+              <span>{transfer.origemPct[transfer.origens[0]] ?? 50}%</span>
+              <span>{transfer.origemPct[transfer.origens[1]] ?? 50}%</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Destinos */}
@@ -81,12 +138,37 @@ export const TransferControl = ({
               }`}
             >
               {s}
+              {transfer.destinos.includes(s) && transfer.destinos.length > 1 && (
+                <span className="ml-1 text-[9px] opacity-75">
+                  {transfer.destinoPct[s] ?? 50}%
+                </span>
+              )}
               {sensorPausado[s] && (
                 <span className="ml-1 text-warning">●</span>
               )}
             </button>
           ))}
         </div>
+        {transfer.destinos.length === 2 && (
+          <div className="mt-2 space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-mono text-muted-foreground w-8">{transfer.destinos[0]}</span>
+              <Slider
+                value={[transfer.destinoPct[transfer.destinos[0]] ?? 50]}
+                onValueChange={([v]) => handleDestinoPctChange(transfer.destinos[0], v)}
+                min={10}
+                max={90}
+                step={5}
+                className="flex-1"
+              />
+              <span className="text-[9px] font-mono text-muted-foreground w-8">{transfer.destinos[1]}</span>
+            </div>
+            <div className="flex justify-between text-[9px] font-mono text-primary">
+              <span>{transfer.destinoPct[transfer.destinos[0]] ?? 50}%</span>
+              <span>{transfer.destinoPct[transfer.destinos[1]] ?? 50}%</span>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Fluxo */}
