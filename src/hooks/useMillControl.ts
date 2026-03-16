@@ -60,6 +60,8 @@ const initialState: MillState = {
     destinos: ["PM01"],
     fluxoKgMin: 50,
     sensorPausado: {},
+    origemPct: { FA01: 100 },
+    destinoPct: { PM01: 100 },
   },
   startTime: null,
 };
