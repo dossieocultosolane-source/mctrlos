@@ -29,6 +29,7 @@ export interface MillState {
   horaInicio: string;
   almocoMinutos: number;
   pesoUnidade: number;
+  ritmoMaximo: number;
   paradas: Parada[];
   silos: Record<string, SiloState>;
   transfer: TransferConfig;
