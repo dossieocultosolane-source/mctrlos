@@ -12,10 +12,10 @@ const Index = () => {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 sm:px-6 py-3 border-b border-border/50">
+      <header className="flex items-center justify-between px-4 py-2 border-b border-border/50">
         <div className="flex items-center gap-2">
-          <Factory size={18} className="text-primary" />
-          <h1 className="text-sm sm:text-base font-semibold tracking-wide uppercase text-foreground">
+          <Factory size={16} className="text-primary" />
+          <h1 className="text-sm font-semibold tracking-wide uppercase text-foreground">
             MillControl <span className="text-primary">OS</span>
           </h1>
         </div>
@@ -38,9 +38,9 @@ const Index = () => {
       </header>
 
       {/* Main content */}
-      <div className="flex-1 overflow-hidden flex flex-col lg:flex-row">
-        {/* Left: Production Panel */}
-        <div className="lg:w-[380px] xl:w-[420px] border-r border-border/50 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-hidden flex flex-col lg:flex-row min-h-0">
+        {/* Left: Production Panel + Chart */}
+        <div className="lg:w-[400px] xl:w-[440px] border-r border-border/50 overflow-y-auto p-3 space-y-3">
           <ProductionPanel
             state={mill.state}
             produzida={mill.produzida}
@@ -50,6 +50,7 @@ const Index = () => {
             previsaoTermino={mill.previsaoTermino}
             consumoTotal={mill.consumoTotal}
             totalParadasMin={mill.totalParadasMin}
+            oee={mill.oee}
             setField={mill.setField}
             addParada={mill.addParada}
             removeParada={mill.removeParada}
@@ -62,7 +63,7 @@ const Index = () => {
         </div>
 
         {/* Right: Flow Diagram + Transfer */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 space-y-3">
           <FlowDiagram
             state={mill.state}
             setSiloAtual={mill.setSiloAtual}
