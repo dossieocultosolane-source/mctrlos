@@ -33,6 +33,7 @@ export interface MillState {
   silos: Record<string, SiloState>;
   transfer: TransferConfig;
   startTime: number | null;
+  lastCalcTime: number | null;
 }
 
 const SENSOR_MAX = 8000;
