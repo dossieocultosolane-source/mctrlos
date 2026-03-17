@@ -1,5 +1,6 @@
 import { useMillControl } from "@/hooks/useMillControl";
 import { ProductionPanel } from "@/components/ProductionPanel";
+import { ProductionChart } from "@/components/ProductionChart";
 import { FlowDiagram } from "@/components/FlowDiagram";
 import { TransferControl } from "@/components/TransferControl";
 import { ReportExport } from "@/components/ReportExport";
@@ -52,6 +53,11 @@ const Index = () => {
             setField={mill.setField}
             addParada={mill.addParada}
             removeParada={mill.removeParada}
+          />
+          <ProductionChart
+            produzida={mill.produzida}
+            restante={mill.restante}
+            meta={mill.state.meta}
           />
         </div>
 
