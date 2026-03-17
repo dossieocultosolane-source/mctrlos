@@ -65,6 +65,7 @@ const initialState: MillState = {
     destinoPct: { PM01: 100 },
   },
   startTime: null,
+  lastCalcTime: null,
 };
 
 export function useMillControl() {
