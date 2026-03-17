@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { MillState, Parada } from "@/hooks/useMillControl";
-import { Clock, Plus, Trash2, Target, TrendingUp, Timer } from "lucide-react";
+import { Clock, Plus, Trash2, Target, TrendingUp, Timer, Gauge } from "lucide-react";
 
 interface ProductionPanelProps {
   state: MillState;
@@ -11,6 +11,7 @@ interface ProductionPanelProps {
   previsaoTermino: Date;
   consumoTotal: number;
   totalParadasMin: number;
+  oee: number;
   setField: <K extends keyof MillState>(key: K, value: MillState[K]) => void;
   addParada: (motivo: string, tempo: number) => void;
   removeParada: (id: string) => void;
@@ -25,6 +26,7 @@ export const ProductionPanel = ({
   previsaoTermino,
   consumoTotal,
   totalParadasMin,
+  oee,
   setField,
   addParada,
   removeParada,
@@ -41,129 +43,145 @@ export const ProductionPanel = ({
     return h > 0 ? `${h}h ${m}min` : `${m}min`;
   };
 
+  const oeeColor = oee >= 85 ? "text-success" : oee >= 60 ? "text-warning" : "text-destructive";
+
   return (
-    <div className="flex flex-col gap-4">
-      {/* Main metric: Previsão */}
-      <div className="industrial-card p-4 text-center">
-        <div className="label-industrial mb-1">Previsão de Término</div>
-        <div className="metric-value-lg text-primary">
-          {ritmoH > 0 ? formatTime(previsaoTermino) : "--:--"}
+    <div className="flex flex-col gap-3">
+      {/* Top metrics row */}
+      <div className="grid grid-cols-3 gap-2">
+        <div className="industrial-card p-3 text-center">
+          <div className="label-industrial mb-0.5">Previsão</div>
+          <div className="font-mono text-lg font-bold text-primary">
+            {ritmoH > 0 ? formatTime(previsaoTermino) : "--:--"}
+          </div>
+          <div className="text-[9px] font-mono text-muted-foreground">
+            {ritmoH > 0 ? formatMinutes(tempoRestanteMin) : "Aguardando"}
+          </div>
         </div>
-        <div className="text-xs font-mono text-muted-foreground mt-1">
-          {ritmoH > 0 ? formatMinutes(tempoRestanteMin) + " restantes" : "Aguardando produção"}
+        <div className="industrial-card p-3 text-center">
+          <div className="label-industrial mb-0.5 flex items-center justify-center gap-1"><TrendingUp size={9} /> Ritmo</div>
+          <div className="font-mono text-lg font-bold text-foreground">{Math.round(ritmoH)}</div>
+          <div className="text-[9px] text-muted-foreground font-mono">un/hora</div>
+        </div>
+        <div className="industrial-card p-3 text-center">
+          <div className="label-industrial mb-0.5 flex items-center justify-center gap-1"><Gauge size={9} /> OEE</div>
+          <div className={`font-mono text-lg font-bold ${oeeColor}`}>{oee.toFixed(1)}%</div>
+          <div className="text-[9px] text-muted-foreground font-mono">eficiência</div>
         </div>
       </div>
 
-      {/* Secondary metrics */}
-      <div className="grid grid-cols-2 gap-3">
+      {/* Production + Consumo row */}
+      <div className="grid grid-cols-2 gap-2">
         <div className="industrial-card p-3">
-          <div className="label-industrial flex items-center gap-1"><TrendingUp size={10} /> Ritmo</div>
-          <div className="metric-value text-foreground mt-1">{Math.round(ritmoH)}</div>
-          <div className="text-[10px] text-muted-foreground font-mono">un/hora</div>
+          <div className="label-industrial flex items-center gap-1"><Target size={9} /> Produção</div>
+          <div className="font-mono text-xl font-bold text-success mt-0.5">{produzida}</div>
+          <div className="text-[9px] text-muted-foreground font-mono">de {state.meta} ({restante} restam)</div>
         </div>
         <div className="industrial-card p-3">
-          <div className="label-industrial flex items-center gap-1"><Target size={10} /> Produção</div>
-          <div className="metric-value text-success mt-1">{produzida}</div>
-          <div className="text-[10px] text-muted-foreground font-mono">de {state.meta} ({restante} restam)</div>
+          <div className="label-industrial">Consumo Farinha</div>
+          <div className="font-mono text-xl font-bold text-warning mt-0.5">{consumoTotal.toLocaleString("pt-BR")}</div>
+          <div className="text-[9px] text-muted-foreground font-mono">kg total</div>
         </div>
       </div>
 
-      {/* Consumo */}
-      <div className="industrial-card p-3">
-        <div className="label-industrial">Consumo de Farinha</div>
-        <div className="metric-value text-warning mt-1">{consumoTotal.toLocaleString("pt-BR")} kg</div>
-      </div>
+      {/* Input fields - more compact */}
+      <div className="industrial-card p-3 space-y-2">
+        <div className="label-industrial mb-1">Parâmetros</div>
 
-      {/* Input fields */}
-      <div className="industrial-card p-4 space-y-3">
-        <div className="label-industrial mb-2">Parâmetros de Produção</div>
-
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-3 gap-2">
           <div>
-            <label className="label-industrial">Meta</label>
+            <label className="label-industrial text-[9px]">Meta</label>
             <input
               type="number"
-              className="input-industrial w-full mt-1"
+              className="input-industrial w-full mt-0.5 py-1.5 text-xs"
               value={state.meta}
               onChange={(e) => setField("meta", Number(e.target.value))}
             />
           </div>
           <div>
-            <label className="label-industrial">Peso/Unidade (kg)</label>
+            <label className="label-industrial text-[9px]">Peso/Un (kg)</label>
             <select
-              className="input-industrial w-full mt-1"
+              className="input-industrial w-full mt-0.5 py-1.5 text-xs"
               value={state.pesoUnidade}
               onChange={(e) => setField("pesoUnidade", Number(e.target.value))}
             >
-              <option value={25}>25 kg (Saca)</option>
-              <option value={1150}>1150 kg (Bag)</option>
+              <option value={25}>25 kg</option>
+              <option value={1150}>1150 kg</option>
             </select>
+          </div>
+          <div>
+            <label className="label-industrial text-[9px]">Ritmo Máx</label>
+            <input
+              type="number"
+              className="input-industrial w-full mt-0.5 py-1.5 text-xs"
+              value={state.ritmoMaximo}
+              onChange={(e) => setField("ritmoMaximo", Number(e.target.value))}
+              min={1}
+            />
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           <div>
-            <label className="label-industrial">Contagem Inicial</label>
+            <label className="label-industrial text-[9px]">Cont. Inicial</label>
             <input
               type="number"
-              className="input-industrial w-full mt-1"
+              className="input-industrial w-full mt-0.5 py-1.5 text-xs"
               value={state.contagemInicial}
               onChange={(e) => setField("contagemInicial", Number(e.target.value))}
             />
           </div>
           <div>
-            <label className="label-industrial">Contagem Atual</label>
+            <label className="label-industrial text-[9px]">Cont. Atual</label>
             <input
               type="number"
-              className="input-industrial w-full mt-1"
+              className="input-industrial w-full mt-0.5 py-1.5 text-xs"
               value={state.contagemAtual}
               onChange={(e) => setField("contagemAtual", Number(e.target.value))}
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="label-industrial flex items-center gap-1"><Clock size={10} /> Hora Início</label>
+            <label className="label-industrial text-[9px] flex items-center gap-0.5"><Clock size={8} /> Início</label>
             <input
               type="time"
-              className="input-industrial w-full mt-1"
+              className="input-industrial w-full mt-0.5 py-1.5 text-xs"
               value={state.horaInicio}
               onChange={(e) => setField("horaInicio", e.target.value)}
             />
           </div>
           <div>
-            <label className="label-industrial">Almoço (min)</label>
+            <label className="label-industrial text-[9px]">Almoço</label>
             <input
               type="number"
-              className="input-industrial w-full mt-1"
+              className="input-industrial w-full mt-0.5 py-1.5 text-xs"
               value={state.almocoMinutos}
               onChange={(e) => setField("almocoMinutos", Number(e.target.value))}
+              placeholder="min"
             />
           </div>
         </div>
       </div>
 
-      {/* Paradas */}
-      <div className="industrial-card p-4">
-        <div className="flex items-center justify-between mb-3">
+      {/* Paradas - compact */}
+      <div className="industrial-card p-3">
+        <div className="flex items-center justify-between mb-2">
           <div className="label-industrial flex items-center gap-1">
-            <Timer size={10} /> Paradas ({totalParadasMin}min total)
+            <Timer size={9} /> Paradas ({totalParadasMin}min)
           </div>
         </div>
 
-        <div className="flex gap-2 mb-3">
+        <div className="flex gap-1.5 mb-2">
           <input
             type="text"
             placeholder="Motivo"
-            className="input-industrial flex-1 text-xs"
+            className="input-industrial flex-1 text-xs py-1.5"
             value={novoMotivo}
             onChange={(e) => setNovoMotivo(e.target.value)}
           />
           <input
             type="number"
             placeholder="Min"
-            className="input-industrial w-16 text-xs"
+            className="input-industrial w-14 text-xs py-1.5"
             value={novoTempo || ""}
             onChange={(e) => setNovoTempo(Number(e.target.value))}
           />
@@ -177,25 +195,25 @@ export const ProductionPanel = ({
               }
             }}
           >
-            <Plus size={14} />
+            <Plus size={12} />
           </button>
         </div>
 
         {state.paradas.length > 0 && (
-          <div className="space-y-1.5 max-h-32 overflow-y-auto">
+          <div className="space-y-1 max-h-24 overflow-y-auto">
             {state.paradas.map((p) => (
               <div
                 key={p.id}
-                className="flex items-center justify-between text-xs bg-background/50 rounded-lg px-2 py-1.5"
+                className="flex items-center justify-between text-[11px] bg-background/50 rounded px-2 py-1"
               >
                 <span className="text-foreground/80">{p.motivo}</span>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5">
                   <span className="font-mono text-muted-foreground">{p.tempo}min</span>
                   <button
                     onClick={() => removeParada(p.id)}
                     className="text-destructive/60 hover:text-destructive transition-colors"
                   >
-                    <Trash2 size={12} />
+                    <Trash2 size={11} />
                   </button>
                 </div>
               </div>
