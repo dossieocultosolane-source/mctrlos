@@ -269,6 +269,8 @@ export function useMillControl() {
     }
   }, []);
 
+  const oee = state.ritmoMaximo > 0 ? Math.min(100, (ritmoH / state.ritmoMaximo) * 100) : 0;
+
   return {
     state,
     produzida,
@@ -278,6 +280,7 @@ export function useMillControl() {
     previsaoTermino,
     consumoTotal,
     totalParadasMin,
+    oee,
     setField,
     setSiloAtual,
     addParada,
