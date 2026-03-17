@@ -47,6 +47,7 @@ const initialState: MillState = {
   horaInicio: "08:00",
   almocoMinutos: 60,
   pesoUnidade: 25,
+  ritmoMaximo: 500,
   paradas: [],
   silos: {
     FA01: { atual: 35000, max: 35000, sensorAtivo: false },
