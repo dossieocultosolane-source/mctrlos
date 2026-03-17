@@ -54,6 +54,11 @@ const Index = () => {
             addParada={mill.addParada}
             removeParada={mill.removeParada}
           />
+          <ProductionChart
+            produzida={mill.produzida}
+            restante={mill.restante}
+            meta={mill.state.meta}
+          />
         </div>
 
         {/* Right: Flow Diagram + Transfer */}
