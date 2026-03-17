@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 
 export interface Parada {
   id: string;
@@ -33,6 +33,7 @@ export interface MillState {
   silos: Record<string, SiloState>;
   transfer: TransferConfig;
   startTime: number | null;
+  lastCalcTime: number | null;
 }
 
 const SENSOR_MAX = 8000;
@@ -64,35 +65,47 @@ const initialState: MillState = {
     destinoPct: { PM01: 100 },
   },
   startTime: null,
+  lastCalcTime: null,
 };
 
 export function useMillControl() {
   const [state, setState] = useState<MillState>(initialState);
   const prevContagemRef = useRef(state.contagemAtual);
 
-  // Production calculations
+  // Production calculations — only recalculate when production-related fields change
   const produzida = Math.max(0, state.contagemAtual - state.contagemInicial);
   const restante = Math.max(0, state.meta - produzida);
-
-  const getElapsedMinutes = useCallback(() => {
-    if (!state.startTime) return 0;
-    return (Date.now() - state.startTime) / 60000;
-  }, [state.startTime]);
 
   const totalParadasMin =
     state.paradas.reduce((a, b) => a + b.tempo, 0) + state.almocoMinutos;
 
-  const elapsedMin = getElapsedMinutes();
-  const effectiveMin = Math.max(0.1, elapsedMin - totalParadasMin);
-  const ritmoH = effectiveMin > 0 ? (produzida / effectiveMin) * 60 : 0;
-
-  const tempoRestanteMin = ritmoH > 0 ? (restante / ritmoH) * 60 : 0;
-
-  const previsaoTermino = new Date(
-    Date.now() + tempoRestanteMin * 60000
-  );
-
   const consumoTotal = produzida * state.pesoUnidade;
+
+  // Snapshot calc time when production inputs change
+  const calcDeps = useMemo(() => ({
+    contagemAtual: state.contagemAtual,
+    contagemInicial: state.contagemInicial,
+    meta: state.meta,
+    pesoUnidade: state.pesoUnidade,
+    paradasCount: state.paradas.length,
+    totalParadasMin,
+  }), [state.contagemAtual, state.contagemInicial, state.meta, state.pesoUnidade, state.paradas.length, totalParadasMin]);
+
+  // Update lastCalcTime whenever production inputs change
+  useEffect(() => {
+    setState((s) => ({ ...s, lastCalcTime: Date.now() }));
+  }, [calcDeps]);
+
+  const { ritmoH, tempoRestanteMin, previsaoTermino } = useMemo(() => {
+    const calcTime = state.lastCalcTime || Date.now();
+    const startT = state.startTime || calcTime;
+    const elapsedMin = (calcTime - startT) / 60000;
+    const effectiveMin = Math.max(0.1, elapsedMin - totalParadasMin);
+    const ritmo = effectiveMin > 0 ? (produzida / effectiveMin) * 60 : 0;
+    const tempoRest = ritmo > 0 ? (restante / ritmo) * 60 : 0;
+    const previsao = new Date(calcTime + tempoRest * 60000);
+    return { ritmoH: ritmo, tempoRestanteMin: tempoRest, previsaoTermino: previsao };
+  }, [state.lastCalcTime, state.startTime, totalParadasMin, produzida, restante]);
 
   // Setters
   const setField = useCallback(
