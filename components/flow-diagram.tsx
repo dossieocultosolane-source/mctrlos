@@ -1,5 +1,6 @@
 "use client";
 
+// Flow diagram component - simple pipe visualization
 import { motion } from "framer-motion";
 import { SiloVisual } from "./silo-visual";
 import type { MillState, TransferConfig } from "@/hooks/use-mill-control";
