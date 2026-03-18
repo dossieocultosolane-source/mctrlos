@@ -1,9 +1,9 @@
 "use client";
 
-// Flow diagram component - simple pipe visualization
 import { motion } from "framer-motion";
 import { SiloVisual } from "./silo-visual";
 import type { MillState, TransferConfig } from "@/hooks/use-mill-control";
+import { MoreVertical } from "lucide-react";
 
 interface FlowDiagramProps {
   state: MillState;
@@ -39,23 +39,24 @@ export function FlowDiagram({
   };
 
   return (
-    <div className="industrial-card p-4">
-      <div className="flex items-center justify-between mb-3">
-        <div className="label-industrial">GERENCIAMENTO DE SILOS</div>
+    <div className="bg-[#252525] rounded-lg border border-[#333] overflow-hidden h-full">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#333]">
+        <h2 className="text-sm font-semibold text-white">GERENCIAMENTO DE SILOS</h2>
+        <MoreVertical size={16} className="text-gray-400 cursor-pointer" />
       </div>
 
-      <div className="relative">
-        {/* Label MOAGEM */}
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-12 h-px bg-border" />
-          <span className="text-xs text-muted-foreground font-medium tracking-wider">
-            MOAGEM
-          </span>
-          <div className="w-12 h-px bg-border" />
+      <div className="p-4">
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="flex-1 h-px bg-[#444]" />
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-4 border-l border-t border-b border-[#666]" />
+            <span className="text-xs text-gray-400 font-medium tracking-wider px-2">MOAGEM</span>
+            <div className="w-2 h-4 border-r border-t border-b border-[#666]" />
+          </div>
+          <div className="flex-1 h-px bg-[#444]" />
         </div>
 
-        {/* FA Silos Row */}
-        <div className="flex justify-center gap-2 sm:gap-4 mb-4 relative z-10">
+        <div className="flex justify-center gap-6 mb-6">
           {faKeys.map((key) => (
             <SiloVisual
               key={key}
@@ -70,200 +71,116 @@ export function FlowDiagram({
           ))}
         </div>
 
-        {/* SVG para tubulacao */}
-        <svg
-          className="w-full h-32 sm:h-40"
-          viewBox="0 0 400 120"
-          preserveAspectRatio="xMidYMid meet"
-        >
+        <svg className="w-full" height="180" viewBox="0 0 600 180" preserveAspectRatio="xMidYMid meet">
           <defs>
             <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#4a5568" />
-              <stop offset="50%" stopColor="#718096" />
-              <stop offset="100%" stopColor="#4a5568" />
+              <stop offset="0%" stopColor="#5a6a7a" />
+              <stop offset="50%" stopColor="#8090a0" />
+              <stop offset="100%" stopColor="#5a6a7a" />
             </linearGradient>
-            <filter id="pipeShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="1" dy="1" stdDeviation="1" floodOpacity="0.3" />
-            </filter>
           </defs>
 
-          {/* Tubos verticais descendo de cada silo FA */}
           {faKeys.map((key, index) => {
-            const xPos = 50 + index * 100;
+            const xPos = 95 + index * 140;
             const isActive = isSourceActive(key);
-
             return (
-              <g key={`pipe-${key}`}>
-                {/* Tubo vertical */}
-                <line
-                  x1={xPos}
-                  y1="0"
-                  x2={xPos}
-                  y2="30"
-                  stroke="url(#pipeGradient)"
-                  strokeWidth="6"
-                  strokeLinecap="round"
-                  filter="url(#pipeShadow)"
-                />
-
-                {/* Animacao de fluxo */}
+              <g key={key}>
+                <rect x={xPos - 4} y="0" width="8" height="35" fill="url(#pipeGradient)" rx="2" />
+                <circle cx={xPos} cy="35" r="6" fill="#8090a0" stroke="#5a6a7a" strokeWidth="2" />
                 {isActive && (
                   <motion.circle
                     r="4"
                     fill="#fbbf24"
-                    initial={{ cy: 0, opacity: 0 }}
-                    animate={{
-                      cy: [0, 15, 30],
-                      opacity: [0, 1, 1],
-                    }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      ease: "linear",
-                    }}
                     cx={xPos}
+                    initial={{ cy: 0, opacity: 0 }}
+                    animate={{ cy: [0, 17, 35], opacity: [0, 1, 1] }}
+                    transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
                   />
                 )}
               </g>
             );
           })}
 
-          {/* Tubo horizontal coletando todos */}
-          <line
-            x1="40"
-            y1="30"
-            x2="360"
-            y2="30"
-            stroke="url(#pipeGradient)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            filter="url(#pipeShadow)"
-          />
+          <rect x="85" y="31" width="430" height="8" fill="url(#pipeGradient)" rx="2" />
 
-          {/* Tubo central descendo para bifurcacao */}
-          <line
-            x1="200"
-            y1="30"
-            x2="200"
-            y2="60"
-            stroke="url(#pipeGradient)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            filter="url(#pipeShadow)"
-          />
+          {faKeys.map((_, index) => {
+            const xPos = 95 + index * 140;
+            return <circle key={index} cx={xPos} cy="35" r="5" fill="#6a7a8a" />;
+          })}
 
-          {/* Bifurcacao para PM01 */}
-          <line
-            x1="200"
-            y1="60"
-            x2="120"
-            y2="100"
-            stroke="url(#pipeGradient)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            filter="url(#pipeShadow)"
-          />
+          <rect x="296" y="35" width="8" height="40" fill="url(#pipeGradient)" rx="2" />
+          <line x1="300" y1="75" x2="180" y2="140" stroke="url(#pipeGradient)" strokeWidth="8" strokeLinecap="round" />
+          <line x1="300" y1="75" x2="420" y2="140" stroke="url(#pipeGradient)" strokeWidth="8" strokeLinecap="round" />
 
-          {/* Bifurcacao para PM02 */}
-          <line
-            x1="200"
-            y1="60"
-            x2="280"
-            y2="100"
-            stroke="url(#pipeGradient)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            filter="url(#pipeShadow)"
-          />
-
-          {/* Animacao no tubo central e bifurcacao */}
           {transfer.rotaAtiva && (
             <>
-              {/* Fluxo horizontal */}
+              <motion.polygon
+                points="175,130 185,130 180,145"
+                fill="#fbbf24"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity }}
+              />
+              <motion.polygon
+                points="415,130 425,130 420,145"
+                fill="#fbbf24"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 0.5, repeat: Infinity, delay: 0.25 }}
+              />
+            </>
+          )}
+
+          <circle cx="180" cy="145" r="5" fill="#6a7a8a" />
+          <circle cx="420" cy="145" r="5" fill="#6a7a8a" />
+
+          {transfer.rotaAtiva && (
+            <>
               <motion.circle
                 r="4"
                 fill="#fbbf24"
-                animate={{
-                  cx: [40, 200, 360],
-                  opacity: [0, 1, 0],
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "linear",
-                }}
-                cy={30}
+                cy={35}
+                animate={{ cx: [85, 300, 515], opacity: [0, 1, 0] }}
+                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               />
-
-              {/* Fluxo descendo */}
               <motion.circle
                 r="4"
                 fill="#fbbf24"
-                animate={{
-                  cy: [30, 45, 60],
-                  opacity: [0, 1, 1],
-                }}
-                transition={{
-                  duration: 0.8,
-                  repeat: Infinity,
-                  ease: "linear",
-                  delay: 0.5,
-                }}
-                cx={200}
+                cx={300}
+                animate={{ cy: [35, 55, 75], opacity: [0, 1, 1] }}
+                transition={{ duration: 0.6, repeat: Infinity, ease: "linear", delay: 0.5 }}
               />
-
-              {/* Fluxo para PM01 */}
               {transfer.destinos.includes("PM01") && !transfer.sensorPausado["PM01"] && (
                 <motion.circle
                   r="4"
                   fill="#fbbf24"
-                  animate={{
-                    cx: [200, 160, 120],
-                    cy: [60, 80, 100],
-                    opacity: [0, 1, 1],
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "linear",
-                    delay: 1,
-                  }}
+                  animate={{ cx: [300, 240, 180], cy: [75, 107, 140], opacity: [0, 1, 1] }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear", delay: 0.8 }}
                 />
               )}
-
-              {/* Fluxo para PM02 */}
               {transfer.destinos.includes("PM02") && !transfer.sensorPausado["PM02"] && (
                 <motion.circle
                   r="4"
                   fill="#fbbf24"
-                  animate={{
-                    cx: [200, 240, 280],
-                    cy: [60, 80, 100],
-                    opacity: [0, 1, 1],
-                  }}
-                  transition={{
-                    duration: 1,
-                    repeat: Infinity,
-                    ease: "linear",
-                    delay: 1.2,
-                  }}
+                  animate={{ cx: [300, 360, 420], cy: [75, 107, 140], opacity: [0, 1, 1] }}
+                  transition={{ duration: 0.8, repeat: Infinity, ease: "linear", delay: 1 }}
                 />
               )}
             </>
           )}
         </svg>
 
-        {/* Label PRE-MISTURA */}
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <div className="w-8 h-px bg-warning" />
-          <span className="text-xs text-warning font-medium tracking-wider">
-            PRE-MISTURA
-          </span>
-          <div className="w-8 h-px bg-warning" />
+        <div className="flex items-center justify-center gap-4 my-4">
+          <div className="flex-1 h-px bg-[#5a4a00]" />
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-4 border-l border-t border-b border-[#8a7a00]" />
+            <span className="text-xs text-yellow-500 font-medium tracking-wider px-2">PRE-MISTURA</span>
+            <div className="w-2 h-4 border-r border-t border-b border-[#8a7a00]" />
+          </div>
+          <div className="flex-1 h-px bg-[#5a4a00]" />
         </div>
 
-        {/* PM Silos Row */}
-        <div className="flex justify-center gap-16 sm:gap-32 relative z-10">
+        <div className="flex justify-center gap-32">
           {pmKeys.map((key) => (
             <SiloVisual
               key={key}
@@ -275,6 +192,7 @@ export function FlowDiagram({
               onClick={() => toggleDestino(key)}
               onValueChange={(v) => setSiloAtual(key, v)}
               showSensorIndicator
+              size="large"
             />
           ))}
         </div>

@@ -1,7 +1,5 @@
 "use client";
 
-import { motion } from "framer-motion";
-
 interface SiloVisualProps {
   nome: string;
   atual: number;
@@ -11,6 +9,7 @@ interface SiloVisualProps {
   onClick?: () => void;
   onValueChange?: (value: number) => void;
   showSensorIndicator?: boolean;
+  size?: "normal" | "large";
 }
 
 export function SiloVisual({
@@ -22,110 +21,157 @@ export function SiloVisual({
   onClick,
   onValueChange,
   showSensorIndicator,
+  size = "normal",
 }: SiloVisualProps) {
   const percent = Math.min(100, (atual / max) * 100);
+  const fillHeight = (percent / 100) * (size === "large" ? 100 : 70);
+
+  const width = size === "large" ? 100 : 70;
+  const height = size === "large" ? 140 : 100;
+  const bodyHeight = size === "large" ? 100 : 70;
 
   return (
     <div
       onClick={onClick}
-      className={`relative flex flex-col items-center gap-1.5 p-3 industrial-card cursor-pointer transition-all duration-200 ${
-        selected ? "ring-1 ring-primary" : ""
+      className={`flex flex-col items-center gap-1 cursor-pointer transition-all ${
+        selected ? "scale-105" : ""
       }`}
     >
-      <span className="label-industrial">{nome}</span>
+      {/* Nome do silo */}
+      <span className="text-xs font-semibold text-white">{nome}</span>
 
-      {/* Sensor indicator for PM silos - red/green lights */}
-      {showSensorIndicator && (
-        <div
-          className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
-            sensorAtivo ? "bg-red-500" : "bg-red-900"
-          }`}
-          style={{
-            boxShadow: sensorAtivo ? "0 0 8px 2px rgba(239, 68, 68, 0.6)" : "none",
-          }}
+      {/* SVG do Silo 3D */}
+      <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`}>
+        <defs>
+          {/* Gradiente metalico para o corpo */}
+          <linearGradient id={`siloBody-${nome}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4a5568" />
+            <stop offset="20%" stopColor="#718096" />
+            <stop offset="50%" stopColor="#a0aec0" />
+            <stop offset="80%" stopColor="#718096" />
+            <stop offset="100%" stopColor="#4a5568" />
+          </linearGradient>
+
+          {/* Gradiente para o topo */}
+          <linearGradient id={`siloTop-${nome}`} x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#a0aec0" />
+            <stop offset="100%" stopColor="#718096" />
+          </linearGradient>
+
+          {/* Gradiente para o cone inferior */}
+          <linearGradient id={`siloCone-${nome}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4a5568" />
+            <stop offset="50%" stopColor="#718096" />
+            <stop offset="100%" stopColor="#4a5568" />
+          </linearGradient>
+
+          {/* Gradiente para o preenchimento */}
+          <linearGradient id={`siloFill-${nome}`} x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#d97706" />
+            <stop offset="50%" stopColor="#fbbf24" />
+            <stop offset="100%" stopColor="#d97706" />
+          </linearGradient>
+
+          {/* Clip path para o preenchimento */}
+          <clipPath id={`siloClip-${nome}`}>
+            <rect x="5" y={10 + (bodyHeight - fillHeight)} width={width - 10} height={fillHeight} />
+          </clipPath>
+        </defs>
+
+        {/* Topo do silo (elipse) */}
+        <ellipse
+          cx={width / 2}
+          cy="10"
+          rx={width / 2 - 5}
+          ry="8"
+          fill={`url(#siloTop-${nome})`}
+          stroke="#4a5568"
+          strokeWidth="1"
         />
-      )}
 
-      {/* Silo body */}
-      <div className="silo-container w-14 h-24 sm:w-16 sm:h-28 relative">
-        {/* Level fill */}
-        <motion.div
-          initial={false}
-          animate={{ height: `${percent}%` }}
-          transition={{ duration: 0.5, ease: "easeOut" }}
-          className={`absolute bottom-0 w-full transition-colors duration-300 ${
-            sensorAtivo ? "bg-warning sensor-pulse" : "bg-primary"
-          }`}
+        {/* Corpo do silo */}
+        <rect
+          x="5"
+          y="10"
+          width={width - 10}
+          height={bodyHeight}
+          fill={`url(#siloBody-${nome})`}
+          stroke="#4a5568"
+          strokeWidth="1"
         />
 
-        {/* High sensor indicator inside silo */}
-        <div
-          className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full transition-colors ${
-            atual >= max ? "bg-destructive sensor-pulse" : "bg-foreground/10"
-          }`}
+        {/* Preenchimento */}
+        <rect
+          x="8"
+          y={10 + (bodyHeight - fillHeight)}
+          width={width - 16}
+          height={fillHeight}
+          fill={`url(#siloFill-${nome})`}
+          opacity="0.9"
         />
-      </div>
 
-      {/* Value display */}
-      <div className="text-[10px] font-mono text-center leading-tight">
-        <span className="text-foreground">
+        {/* Cone inferior */}
+        <polygon
+          points={`5,${10 + bodyHeight} ${width - 5},${10 + bodyHeight} ${width / 2},${height - 5}`}
+          fill={`url(#siloCone-${nome})`}
+          stroke="#4a5568"
+          strokeWidth="1"
+        />
+
+        {/* Saida do cone */}
+        <rect
+          x={width / 2 - 5}
+          y={height - 8}
+          width="10"
+          height="8"
+          fill="#4a5568"
+          rx="2"
+        />
+
+        {/* Borda de selecao */}
+        {selected && (
+          <rect
+            x="2"
+            y="2"
+            width={width - 4}
+            height={height - 4}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth="2"
+            rx="4"
+          />
+        )}
+      </svg>
+
+      {/* Valores */}
+      <div className="text-center">
+        <div className="text-xs font-bold text-white">
           {Math.round(atual).toLocaleString("pt-BR")} kg
-        </span>
-        <br />
-        <span className="text-muted-foreground">
+        </div>
+        <div className="text-[10px] text-gray-400">
           {Math.round(max).toLocaleString("pt-BR")} kg
-        </span>
-        <br />
-        <span className="text-muted-foreground">{percent.toFixed(0)}%</span>
+        </div>
+        <div className="text-[10px] text-gray-400">{percent.toFixed(0)}%</div>
       </div>
 
-      {/* Editable input */}
-      {onValueChange && (
-        <input
-          type="number"
-          value={Math.round(atual)}
-          onChange={(e) => onValueChange(Number(e.target.value))}
-          onClick={(e) => e.stopPropagation()}
-          className="input-industrial w-full text-[10px] text-center mt-1 py-1 px-1"
-          min={0}
-          max={max}
-        />
-      )}
-
-      {/* Sensor labels for PM silos */}
+      {/* Indicadores de sensor para PM */}
       {showSensorIndicator && (
-        <div className="flex flex-col items-center gap-1 mt-1">
+        <div className="flex items-center gap-3 mt-1">
           <div className="flex items-center gap-1">
             <div
-              className={`w-2.5 h-2.5 rounded-full ${
-                sensorAtivo ? "bg-red-500" : "bg-red-900"
+              className={`w-3 h-3 rounded-full ${
+                sensorAtivo ? "bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.6)]" : "bg-red-900"
               }`}
-              style={{
-                boxShadow: sensorAtivo ? "0 0 6px 1px rgba(239, 68, 68, 0.6)" : "none",
-              }}
             />
-            <span className="text-[8px] font-mono text-muted-foreground uppercase">
-              Sensor Alto
-            </span>
           </div>
-          <div className="flex items-center gap-1">
-            <div
-              className="w-2.5 h-2.5 rounded-full bg-green-500"
-              style={{
-                boxShadow: "0 0 6px 1px rgba(34, 197, 94, 0.6)",
-              }}
-            />
-            <span className="text-[8px] font-mono text-green-500 uppercase">
-              Ativo
-            </span>
-          </div>
+          <span className="text-[9px] text-gray-400 uppercase">Sensor Alto</span>
         </div>
       )}
 
-      {sensorAtivo && !showSensorIndicator && (
-        <span className="text-[9px] font-mono text-warning uppercase tracking-wider">
-          Sensor
-        </span>
+      {showSensorIndicator && (
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
+        </div>
       )}
     </div>
   );

@@ -2,49 +2,33 @@
 
 import { useMillControl } from "@/hooks/use-mill-control";
 import { ProductionPanel } from "@/components/production-panel";
-import { ProductionChart } from "@/components/production-chart";
 import { FlowDiagram } from "@/components/flow-diagram";
 import { TransferControl } from "@/components/transfer-control";
-import { ReportExport } from "@/components/report-export";
-import { Factory } from "lucide-react";
+import { Menu, HelpCircle, LogOut } from "lucide-react";
 
 export default function Home() {
   const mill = useMillControl();
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-background">
+    <div className="min-h-screen flex flex-col bg-[#1a1a1a]">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-2 border-b border-border/50">
-        <div className="flex items-center gap-2">
-          <Factory size={16} className="text-primary" />
-          <h1 className="text-sm font-semibold tracking-wide uppercase text-foreground">
-            MillControl <span className="text-primary">OS</span>
+      <header className="flex items-center justify-between px-4 py-3 bg-[#252525] border-b border-[#333]">
+        <div className="flex items-center gap-3">
+          <Menu size={20} className="text-gray-400 cursor-pointer hover:text-white" />
+          <h1 className="text-sm font-semibold tracking-wide text-white">
+            SISTEMA SUPERVISORIO - CONTROLE DE FARINHA
           </h1>
         </div>
         <div className="flex items-center gap-3">
-          <div className="hidden sm:flex items-center gap-2 text-[10px] font-mono text-muted-foreground">
-            <div
-              className={`w-1.5 h-1.5 rounded-full ${mill.state.transfer.rotaAtiva ? "bg-success" : "bg-muted-foreground"}`}
-            />
-            {mill.state.transfer.rotaAtiva ? "SISTEMA ATIVO" : "STANDBY"}
-          </div>
-          <ReportExport
-            state={mill.state}
-            produzida={mill.produzida}
-            restante={mill.restante}
-            ritmoH={mill.ritmoH}
-            tempoRestanteMin={mill.tempoRestanteMin}
-            previsaoTermino={mill.previsaoTermino}
-            consumoTotal={mill.consumoTotal}
-            totalParadasMin={mill.totalParadasMin}
-          />
+          <HelpCircle size={18} className="text-gray-400 cursor-pointer hover:text-white" />
+          <LogOut size={18} className="text-gray-400 cursor-pointer hover:text-white" />
         </div>
       </header>
 
-      {/* Main content */}
-      <div className="flex-1 overflow-hidden flex flex-col lg:flex-row min-h-0">
-        {/* Left: Production Panel + Chart */}
-        <div className="lg:w-[400px] xl:w-[440px] border-r border-border/50 overflow-y-auto p-3 space-y-3">
+      {/* Main content - 3 columns */}
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden">
+        {/* Left: Dashboard de Producao */}
+        <div className="lg:w-[340px] border-r border-[#333] overflow-y-auto p-4">
           <ProductionPanel
             state={mill.state}
             produzida={mill.produzida}
@@ -59,20 +43,19 @@ export default function Home() {
             addParada={mill.addParada}
             removeParada={mill.removeParada}
           />
-          <ProductionChart
-            produzida={mill.produzida}
-            restante={mill.restante}
-            meta={mill.state.meta}
-          />
         </div>
 
-        {/* Right: Flow Diagram + Transfer */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {/* Center: Gerenciamento de Silos */}
+        <div className="flex-1 overflow-y-auto p-4">
           <FlowDiagram
             state={mill.state}
             setSiloAtual={mill.setSiloAtual}
             setTransfer={mill.setTransfer}
           />
+        </div>
+
+        {/* Right: Controle de Transilagem */}
+        <div className="lg:w-[280px] border-l border-[#333] overflow-y-auto p-4">
           <TransferControl
             transfer={mill.state.transfer}
             setTransfer={mill.setTransfer}
