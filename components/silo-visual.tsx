@@ -10,6 +10,7 @@ interface SiloVisualProps {
   selected?: boolean;
   onClick?: () => void;
   onValueChange?: (value: number) => void;
+  showSensorIndicator?: boolean;
 }
 
 export function SiloVisual({
@@ -20,6 +21,7 @@ export function SiloVisual({
   selected,
   onClick,
   onValueChange,
+  showSensorIndicator,
 }: SiloVisualProps) {
   const percent = Math.min(100, (atual / max) * 100);
 
@@ -31,6 +33,18 @@ export function SiloVisual({
       }`}
     >
       <span className="label-industrial">{nome}</span>
+
+      {/* Sensor indicator for PM silos - red/green lights */}
+      {showSensorIndicator && (
+        <div
+          className={`absolute -top-1 -right-1 w-3 h-3 rounded-full ${
+            sensorAtivo ? "bg-red-500" : "bg-red-900"
+          }`}
+          style={{
+            boxShadow: sensorAtivo ? "0 0 8px 2px rgba(239, 68, 68, 0.6)" : "none",
+          }}
+        />
+      )}
 
       {/* Silo body */}
       <div className="silo-container w-14 h-24 sm:w-16 sm:h-28 relative">
@@ -44,7 +58,7 @@ export function SiloVisual({
           }`}
         />
 
-        {/* High sensor indicator */}
+        {/* High sensor indicator inside silo */}
         <div
           className={`absolute top-1.5 right-1.5 w-2 h-2 rounded-full transition-colors ${
             atual >= max ? "bg-destructive sensor-pulse" : "bg-foreground/10"
@@ -55,10 +69,14 @@ export function SiloVisual({
       {/* Value display */}
       <div className="text-[10px] font-mono text-center leading-tight">
         <span className="text-foreground">
-          {Math.round(atual).toLocaleString("pt-BR")}kg
+          {Math.round(atual).toLocaleString("pt-BR")} kg
         </span>
         <br />
-        <span className="text-muted-foreground">{percent.toFixed(1)}%</span>
+        <span className="text-muted-foreground">
+          {Math.round(max).toLocaleString("pt-BR")} kg
+        </span>
+        <br />
+        <span className="text-muted-foreground">{percent.toFixed(0)}%</span>
       </div>
 
       {/* Editable input */}
@@ -74,7 +92,37 @@ export function SiloVisual({
         />
       )}
 
-      {sensorAtivo && (
+      {/* Sensor labels for PM silos */}
+      {showSensorIndicator && (
+        <div className="flex flex-col items-center gap-1 mt-1">
+          <div className="flex items-center gap-1">
+            <div
+              className={`w-2.5 h-2.5 rounded-full ${
+                sensorAtivo ? "bg-red-500" : "bg-red-900"
+              }`}
+              style={{
+                boxShadow: sensorAtivo ? "0 0 6px 1px rgba(239, 68, 68, 0.6)" : "none",
+              }}
+            />
+            <span className="text-[8px] font-mono text-muted-foreground uppercase">
+              Sensor Alto
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div
+              className="w-2.5 h-2.5 rounded-full bg-green-500"
+              style={{
+                boxShadow: "0 0 6px 1px rgba(34, 197, 94, 0.6)",
+              }}
+            />
+            <span className="text-[8px] font-mono text-green-500 uppercase">
+              Ativo
+            </span>
+          </div>
+        </div>
+      )}
+
+      {sensorAtivo && !showSensorIndicator && (
         <span className="text-[9px] font-mono text-warning uppercase tracking-wider">
           Sensor
         </span>
