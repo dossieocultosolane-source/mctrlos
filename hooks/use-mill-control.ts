@@ -270,7 +270,7 @@ export function useMillControl() {
           });
         }
 
-        // 2. Consumption from PM by production
+        // 2. Consumption from PM by production - with real industrial behavior
         const deltaContagem = s.contagemAtual - prevContagemRef.current;
         if (deltaContagem > 0) {
           const consumo = deltaContagem * s.pesoUnidade;
@@ -279,11 +279,48 @@ export function useMillControl() {
           );
           if (activePMs.length > 0) {
             const consumoPorPM = consumo / activePMs.length;
+            
             activePMs.forEach((pm) => {
-              newSilos[pm].atual = Math.max(
-                0,
-                newSilos[pm].atual - consumoPorPM
-              );
+              const pmSilo = newSilos[pm];
+              const pmEstaCheioPerto = pmSilo.atual >= SENSOR_MAX - 100; // Cheio ou perto (dentro de 100kg)
+              
+              // REGRA DE COMPORTAMENTO REAL:
+              // Se transilagem ativa + PM cheio/perto + FA tem farinha disponível
+              // -> Consumo é reposto automaticamente, desconta direto do FA
+              if (s.transfer.rotaAtiva && pmEstaCheioPerto) {
+                // Verificar se há farinha disponível nos silos FA de origem
+                const farinhaDisponivelFA = s.transfer.origens.reduce(
+                  (total, orig) => total + newSilos[orig].atual,
+                  0
+                );
+                
+                if (farinhaDisponivelFA >= consumoPorPM) {
+                  // Manter PM em 8000kg (consumo compensado automaticamente)
+                  pmSilo.atual = SENSOR_MAX;
+                  
+                  // Descontar o consumo diretamente dos silos FA (proporcional)
+                  const totalOrigPct = s.transfer.origens.reduce(
+                    (sum, o) =>
+                      sum +
+                      (s.transfer.origemPct[o] || 100 / s.transfer.origens.length),
+                    0
+                  );
+                  
+                  s.transfer.origens.forEach((orig) => {
+                    const origPct =
+                      (s.transfer.origemPct[orig] ||
+                        100 / s.transfer.origens.length) / totalOrigPct;
+                    const consumoDoFA = consumoPorPM * origPct;
+                    newSilos[orig].atual = Math.max(0, newSilos[orig].atual - consumoDoFA);
+                  });
+                } else {
+                  // Não há farinha suficiente no FA, consumir do PM normalmente
+                  pmSilo.atual = Math.max(0, pmSilo.atual - consumoPorPM);
+                }
+              } else {
+                // Transilagem desligada ou PM não está cheio - comportamento normal
+                pmSilo.atual = Math.max(0, pmSilo.atual - consumoPorPM);
+              }
             });
           }
           prevContagemRef.current = s.contagemAtual;
