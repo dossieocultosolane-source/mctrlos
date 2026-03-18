@@ -68,13 +68,17 @@ function ScrewConveyor({
             fill="none"
             stroke={isActive ? "#fbbf24" : "#718096"}
             strokeWidth="2"
-            style={{
-              animation: isActive
-                ? `screwRotate 0.3s linear infinite`
-                : "none",
-              animationDelay: `${i * 0.05}s`,
-            }}
-          />
+          >
+            {isActive && (
+              <animate
+                attributeName="rx"
+                values="3;1;3"
+                dur="0.3s"
+                repeatCount="indefinite"
+                begin={`${i * 0.05}s`}
+              />
+            )}
+          </ellipse>
         </g>
       ))}
       
@@ -160,21 +164,6 @@ export function FlowDiagram({
       </div>
 
       <div className="relative">
-        {/* CSS para animacao das roscas */}
-        <style jsx>{`
-          @keyframes screwRotate {
-            0% {
-              transform: scaleX(1);
-            }
-            50% {
-              transform: scaleX(0.3);
-            }
-            100% {
-              transform: scaleX(1);
-            }
-          }
-        `}</style>
-
         {/* SVG for screw conveyors */}
         <svg
           className="absolute inset-0 w-full h-full pointer-events-none"
